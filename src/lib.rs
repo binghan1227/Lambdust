@@ -7,6 +7,7 @@ pub mod church;
 pub mod eval;
 pub mod examples;
 pub mod expr;
+pub mod parser;
 
 // Re-export commonly used items
 pub use eval::{bind_vars, eval, trace_eval};
