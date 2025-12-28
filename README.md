@@ -12,10 +12,56 @@ cargo build --release
 
 ## Usage
 
-### Run in Terminal
+### Interactive REPL
+
+Run the interactive lambda calculus interpreter:
 
 ```bash
 cargo run
+```
+
+This starts an interactive session where you can enter lambda expressions and see them evaluated:
+
+```
+Lambdust
+> (\x.x) y
+y
+> (\x.\y.x) a b
+a
+```
+
+**Command-line options:**
+
+```bash
+cargo run -- [OPTIONS]
+
+Options:
+  -u, --unique-id     Show unique ID after variable names (default: off)
+  -t, --trace <NUM>   Maximum number of evaluation steps (default: 10)
+  -p, --print-step    Print each evaluation step (default: off)
+  -h, --help          Print help information
+  -V, --version       Print version information
+```
+
+**REPL commands:**
+
+- `:h`, `:help` - Show help message
+- `:q`, `:quit` - Exit the program
+- `:p`, `:print` - Toggle step-by-step printing during evaluation
+- `:u`, `:unique` - Toggle display of unique variable IDs
+- `:t`, `:trace [num]` - Show or set the maximum trace limit
+
+**Examples:**
+
+```bash
+# Run with step-by-step printing enabled
+cargo run -- -p
+
+# Set trace limit to 100 steps
+cargo run -- -t 100
+
+# Show unique IDs and print steps
+cargo run -- -u -p
 ```
 
 ### Run Tests
@@ -42,7 +88,9 @@ lambdust = { path = "../lambdust" }
 Then use in your code:
 
 ```rust
-use lambdust::{app, fun, var, bind_vars, trace_eval, parser};
+use lambdust::eval::{bind_vars, trace_eval};
+use lambdust::expr::{app, fun, var};
+use lambdust::parser;
 use lambdust::church::*;
 
 fn main() {
@@ -55,7 +103,11 @@ fn main() {
 
     // Bind variables and evaluate
     let bound = bind_vars(*expr);
-    trace_eval(bound, 10);
+    let (result, exceeded_limit) = trace_eval(bound, 10, false, false);
+    println!("{}", result.format(false));
+    if exceeded_limit {
+        println!("Evaluation exceeded step limit");
+    }
 }
 ```
 
@@ -64,7 +116,8 @@ fn main() {
 The parser module allows you to write lambda expressions using a familiar syntax:
 
 ```rust
-use lambdust::{parser, bind_vars, trace_eval};
+use lambdust::eval::{bind_vars, trace_eval};
+use lambdust::parser;
 
 // Parse expressions from strings
 let identity = parser::parse("\\x.x").unwrap();              // Identity: λx.x
@@ -75,9 +128,15 @@ let complex = parser::parse("(\\f.\\x.f (f x)) g z").unwrap(); // Complex expres
 // You can also use the Unicode lambda symbol
 let identity = parser::parse("λx.x").unwrap();
 
-// Evaluate parsed expressions
+// Evaluate parsed expressions with options
 let bound = bind_vars(*apply);
-trace_eval(bound, 10);
+let (result, exceeded_limit) = trace_eval(
+    bound,
+    10,      // max iterations
+    false,   // show unique IDs
+    false    // print each step
+);
+println!("{}", result.format(false));
 ```
 
 **Parser syntax:**
@@ -96,14 +155,21 @@ src/
 ├── parser.rs      # Parser for lambda calculus syntax
 ├── church.rs      # Church encodings for booleans and numerals
 ├── examples.rs    # Example demonstrations
-└── main.rs        # CLI entry point
+├── args.rs        # Command-line argument parsing
+└── main.rs        # Interactive REPL entry point
 ```
 
 ## Features
 
+- **Interactive REPL**: Command-line interface with:
+  - Real-time lambda expression evaluation
+  - Configurable display options (unique IDs, step-by-step tracing)
+  - Adjustable evaluation limits
+  - Built-in help system
+- **Command-line Arguments**: Control behavior via flags (`-u`, `-t`, `-p`)
 - **Expression Builder**: Programmatically construct lambda expressions using `var`, `fun`, and `app`
 - **Parser**: Parse lambda expressions from string syntax (supports both `\` and `λ`)
-- **Evaluator**: Beta-reduction with step-by-step tracing
+- **Evaluator**: Beta-reduction with configurable step-by-step tracing
 - **Church Encodings**: Built-in support for:
   - Booleans: TRUE, FALSE, AND, OR, NOT, IF
   - Numerals: ZERO, SUCC, PLUS, MULT, PRED, SUB
