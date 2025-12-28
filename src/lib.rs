@@ -3,6 +3,7 @@
 //! This library provides a simple lambda calculus evaluator along with
 //! implementations of Church encodings for booleans and numerals.
 
+pub mod args;
 pub mod church;
 pub mod eval;
 pub mod examples;

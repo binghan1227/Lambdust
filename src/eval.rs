@@ -49,11 +49,11 @@ pub fn eval(expr: Expr) -> Expr {
 }
 
 /// Trace evaluation steps, printing each intermediate result
-pub fn trace_eval(expr: Expr, max_iterations: usize) -> Expr {
+pub fn trace_eval(expr: Expr, max_iterations: usize, show_unique_id: bool) -> Expr {
     let mut current = expr;
 
     println!("Step 0:");
-    println!("{}", current);
+    println!("{}", current.format(show_unique_id));
 
     for i in 1..=max_iterations {
         let next = eval(current.clone());
@@ -64,7 +64,7 @@ pub fn trace_eval(expr: Expr, max_iterations: usize) -> Expr {
         }
 
         println!("\nStep {}:", i);
-        println!("{}", next);
+        println!("{}", next.format(show_unique_id));
 
         current = next;
     }
@@ -85,9 +85,7 @@ fn bind_var(body: Expr, name: &VarName) -> Expr {
             }
             Expr::Var(body_name)
         }
-        Expr::Fun(body_name, fun_body) => {
-            Expr::Fun(body_name, Box::new(bind_var(*fun_body, name)))
-        }
+        Expr::Fun(body_name, fun_body) => Expr::Fun(body_name, Box::new(bind_var(*fun_body, name))),
         Expr::App(lhs, rhs) => Expr::App(
             Box::new(bind_var(*lhs, name)),
             Box::new(bind_var(*rhs, name)),
@@ -130,7 +128,10 @@ mod tests {
     #[test]
     fn test_eval_identity() {
         // (λx.x) y -> y
-        let expr = *app(fun("x".to_string(), var("x".to_string())), var("y".to_string()));
+        let expr = *app(
+            fun("x".to_string(), var("x".to_string())),
+            var("y".to_string()),
+        );
         let bound = bind_vars(expr);
         let result = eval(bound);
 
