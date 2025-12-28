@@ -48,32 +48,41 @@ pub fn eval(expr: Expr) -> Expr {
     }
 }
 
-/// Trace evaluation steps, printing each intermediate result
-pub fn trace_eval(expr: Expr, max_iterations: usize, show_unique_id: bool) -> Expr {
+/// Trace evaluation steps
+pub fn trace_eval(
+    expr: Expr,
+    max_iterations: usize,
+    show_unique_id: bool,
+    print_step: bool,
+) -> (Expr, bool) {
     let mut current = expr;
 
-    println!("Step 0:");
-    println!("{}", current.format(show_unique_id));
+    if print_step {
+        println!("Step 0:");
+        println!("{}", current.format(show_unique_id));
+    }
 
     for i in 1..=max_iterations {
         let next = eval(current.clone());
 
         if next == current {
-            println!("\nReached normal form after {} step(s)", i - 1);
-            return current;
+            // println!("\nReached normal form after {} step(s)", i - 1);
+            return (current, false);
         }
 
-        println!("\nStep {}:", i);
-        println!("{}", next.format(show_unique_id));
+        if print_step {
+            println!("\nStep {}:", i);
+            println!("{}", next.format(show_unique_id));
+        }
 
         current = next;
     }
 
-    println!(
-        "\nStopped after {} iterations (may not be in normal form)",
-        max_iterations
-    );
-    current
+    // println!(
+    //     "\nStopped after {} iterations (may not be in normal form)",
+    //     max_iterations
+    // );
+    (current, true)
 }
 
 /// Bind a variable in an expression body

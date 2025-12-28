@@ -10,4 +10,8 @@ pub struct Args {
     /// Maximum number of steps to trace
     #[arg(short = 't', long, default_value_t = 10)]
     pub trace: usize,
+
+    /// Print each step
+    #[arg(short = 'p', long, default_value_t = false)]
+    pub print_step: bool,
 }
